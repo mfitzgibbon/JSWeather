@@ -100,6 +100,10 @@ class Weather{
       this.onFormSubmit.bind(Weather);
       this.$form.addEventListener('submit', event => {this.onFormSubmit(event);});
       this.renderWeatherList.bind(Weather);
+      this.renderWeatherListItem.bind(Weather);
+      this.renderCurrentDay.bind(Weather);
+
+
     }
 
     onFormSubmit(event){
@@ -115,13 +119,22 @@ class Weather{
           this.$zipcodeInput.value = '';
           this.renderWeatherList(this.state.dates);
       })
-      .catch(error => {alert("There was a problem making the fetch.")})
+      .catch(error => {alert("There was a problem making the fetch.")});
+
+      this.clearCurrentDay();
     }
 
     renderWeatherList(weatherDays){
       console.log(weatherDays);
+      console.log(this.state.city);
       const itemsHTML = weatherDays.map((weatherDay, index) => this.renderWeatherListItem(weatherDay, index)).join('');
-      document.getElementById('weatherList').innerHTML = `<div class = "flex-parent"> ${itemsHTML} </div>`
+      this.$weatherList.innerHTML = `<div class = "flex-parent"> ${itemsHTML} </div>`;
+      for(var i = 0; i < weatherDays.length; i++)
+      {
+        let dayHTML = this.$weatherList.children[0].children[i];
+        console.log(dayHTML.dataset.index);
+        dayHTML.addEventListener('click', () => this.renderCurrentDay(dayHTML.dataset.index));
+      }
     }
 
     renderWeatherListItem(weatherDay, index){
@@ -131,7 +144,7 @@ class Weather{
       return `
       <div class="weather-list-item" data-index="${index}">
         <h2> ${d.getMonth() + 1} / ${d.getDate()} </h2>
-        <h3> ${this.getDayName(d)}</h3>
+        <h3> ${this.getDayName(d.getDay())}</h3>
         <h3> ${weatherDay.temp.min} &deg;F &#124;
             ${weatherDay.temp.max} &deg;F
         </h3>
@@ -139,29 +152,30 @@ class Weather{
       `
     }
 
-    renderCurrentDay(index)
-    {
-      
+    renderCurrentDay(index){
+      console.log(index);
+      var day = this.state.dates[index];
 
-      `<div class="current-day">
-      <h1 class="day-header">WEEKDAY in CITY</h1>
+      var html = `<div class="current-day">
+      <h1 class="day-header">${this.getDayName(new Date(day.dt*1000).getDay())} in ${this.state.city.name}</h1>
       <div class="weather">
-      <p><img src='http://openweathermap.org/img/w/ICON.png' alt=‘DESCRIPTION’/>
-      DESCRIPTION</p>
+      <p><img src='http://openweathermap.org/img/w/${day.weather[0].icon}.png' alt=‘DESCRIPTION’/>
+      ${day.weather[0].description}</p>
       </div>
       <div class="details flex-parent">
           <div class="temperature-breakdown">
-          <p>Morning Temperature: TEMP &deg;F</p>
-          <p>Day Temperature: TEMP &deg;F</p>
-          <p>Evening Temperature: TEMP &deg;F</p>
-          <p>Night Temperature: TEMP &deg;F</p>
+          <p>Morning Temperature: ${day.temp.morn} &deg;F</p>
+          <p>Day Temperature: ${day.temp.day} &deg;F</p>
+          <p>Evening Temperature: ${day.temp.eve} &deg;F</p>
+          <p>Night Temperature: ${day.temp.night} &deg;F</p>
           </div>
       </div>
   </div>`
-    }
+  document.getElementById("currentDay").innerHTML = html;
+}
 
-    getDayName(date){
-      switch(date.getDay()){
+    getDayName(dayNum){
+      switch(dayNum){
         case 0:
           return "Sunday";
         case 1:
@@ -179,8 +193,11 @@ class Weather{
       }
     }
 
-
-
+    clearCurrentDay(){
+      console.log("Clearing currentDay");
+      console.log(document.getElementById("currentDay"));
+      document.getElementById("currentDay").innerHTML = "";
+    }
 }
 
 window.addEventListener("load", () => new Weather());
