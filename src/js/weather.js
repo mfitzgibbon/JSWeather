@@ -2,6 +2,7 @@ import './general';
 
 //http://api.openweathermap.org/data/2.5/forecast/daily?zip=97405&units=imperial&appid=c59493e7a8643f49446baf0d5ed9d646
 
+
 /* Create a class called Weather
 - Part 1 - Retrieve the weather information when the user clicks the buttobn
   - Create the constructor
@@ -78,3 +79,108 @@ END OF PART 3 - TEST AND DEBUG YOUR APP
 */
 
 // Don't forget to instantiate the a weather object!
+
+
+class Weather{
+
+    constructor() {
+      this.state = {
+        zipcode: "",
+        city: {},
+        dates: [],
+        selectedDate: null
+      };
+      this.url = "http://api.openweathermap.org/data/2.5/forecast/daily?zip=";
+      this.apikey = "&units=imperial&appid=c59493e7a8643f49446baf0d5ed9d646";
+      this.$form = document.querySelector("#zipForm");
+      this.$zipcodeInput = document.querySelector("#zipcode");
+      this.$weatherList = document.querySelector("#weatherList");
+      this.$currentDay = document.querySelector("#currentDay");
+
+      this.onFormSubmit.bind(Weather);
+      this.$form.addEventListener('submit', event => {this.onFormSubmit(event);});
+      this.renderWeatherList.bind(Weather);
+    }
+
+    onFormSubmit(event){
+      event.preventDefault();
+      console.log("Form Was Submitted");
+      this.state.zipcode = this.$zipcodeInput.value;
+      fetch(`${this.url}${this.state.zipcode}${this.apikey}`)
+      .then(response => response.json())
+      .then(data => {
+          this.state.city = data.city;
+          this.state.dates = data.list;
+          this.state.selectedDate = null;
+          this.$zipcodeInput.value = '';
+          this.renderWeatherList(this.state.dates);
+      })
+      .catch(error => {alert("There was a problem making the fetch.")})
+    }
+
+    renderWeatherList(weatherDays){
+      console.log(weatherDays);
+      const itemsHTML = weatherDays.map((weatherDay, index) => this.renderWeatherListItem(weatherDay, index)).join('');
+      document.getElementById('weatherList').innerHTML = `<div class = "flex-parent"> ${itemsHTML} </div>`
+    }
+
+    renderWeatherListItem(weatherDay, index){
+      var seconds = weatherDay.dt;
+      var d  = new Date(seconds * 1000);
+
+      return `
+      <div class="weather-list-item" data-index="${index}">
+        <h2> ${d.getMonth() + 1} / ${d.getDate()} </h2>
+        <h3> ${this.getDayName(d)}</h3>
+        <h3> ${weatherDay.temp.min} &deg;F &#124;
+            ${weatherDay.temp.max} &deg;F
+        </h3>
+      </div>
+      `
+    }
+
+    renderCurrentDay(index)
+    {
+      
+
+      `<div class="current-day">
+      <h1 class="day-header">WEEKDAY in CITY</h1>
+      <div class="weather">
+      <p><img src='http://openweathermap.org/img/w/ICON.png' alt=‘DESCRIPTION’/>
+      DESCRIPTION</p>
+      </div>
+      <div class="details flex-parent">
+          <div class="temperature-breakdown">
+          <p>Morning Temperature: TEMP &deg;F</p>
+          <p>Day Temperature: TEMP &deg;F</p>
+          <p>Evening Temperature: TEMP &deg;F</p>
+          <p>Night Temperature: TEMP &deg;F</p>
+          </div>
+      </div>
+  </div>`
+    }
+
+    getDayName(date){
+      switch(date.getDay()){
+        case 0:
+          return "Sunday";
+        case 1:
+          return "Monday";
+        case 2:
+          return "Tuesday";
+        case 3:
+          return "Wednesday";
+        case 4:
+          return "Thursday";
+        case 5:
+          return "Friday";
+        case 6:
+          return "Saturday";
+      }
+    }
+
+
+
+}
+
+window.addEventListener("load", () => new Weather());
